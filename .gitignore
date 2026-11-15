@@ -14,3 +14,7 @@ data/
 traces/
 results/
 samples/
+
+# shareable test-data bundle (built by `tender bundle`) and where users unpack it
+dist/
+test-data/

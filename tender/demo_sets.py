@@ -377,7 +377,8 @@ def build(out_root: Path | None = None) -> list[Path]:
                       "| requirement | expected |", "|---|---|"]
             lines += [f"| {g['key']}: {g['tender_quote'][:70]} (p. {g['tender_page']}) | {g['status']} |"
                       for g in gold if g["status"] != MET]
-            lines += ["", f"Score it: `uv run tender eval <project> --gold {gold_path}`", ""]
+            lines += ["", f"Score it (server stopped): `uv run tender eval <project-id> --gold <this folder>/{gold_path.name}`",
+                      ""]
             made.append(path)
         (out / "README.md").write_text("\n".join(lines), encoding="utf-8")
     return made

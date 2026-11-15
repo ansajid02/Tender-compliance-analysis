@@ -38,6 +38,16 @@ def cmd_demo_sets(a) -> None:
     console.print("See data/demo_sets/*/README.md for what each bid should score.")
 
 
+def cmd_bundle(a) -> None:
+    from .bundle import build
+
+    out = build()
+    files = [p for p in out.rglob("*") if p.is_file()]
+    size = sum(p.stat().st_size for p in files) / 1e6
+    console.print(f"wrote {out} ({len(files)} files, {size:.1f} MB)")
+    console.print(f"zip:  {out.parent / (out.name + '.zip')}")
+
+
 def cmd_new(a) -> None:
     p = projects.create(a.name, a.id)
     console.print(f"created project [bold]{p.project_id}[/] ({p.name})")
@@ -260,6 +270,8 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("samples", help="write the fictional sample tender / bid / gold key").set_defaults(fn=cmd_samples)
     sub.add_parser("demo-sets", help="2 real small RFQs x 3 fictional bids + answer keys (data/demo_sets)"
                    ).set_defaults(fn=cmd_demo_sets)
+    sub.add_parser("bundle", help="build the shareable test-data folder + zip in dist/ (no secrets)"
+                   ).set_defaults(fn=cmd_bundle)
     p = sub.add_parser("new", help="create a project")
     p.add_argument("name")
     p.add_argument("--id", help="project id (default: random)")

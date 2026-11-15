@@ -14,11 +14,128 @@ tokens until 2027-01-01, when they double (see "First live run"). Embeddings use
 second backend (`LLM_BACKEND=bedrock`).
 
 > **Status: demo-ready.** The full pipeline, the HTTP API with background jobs and API keys, the web UI
-> with clickable citations, and Docker Compose (API + Qdrant + Postgres) are built. 62 offline tests (60 run on this Mac; 2 need Postgres or Tesseract)
-> cover them (fake LLM, in-memory Qdrant; the DB layer is also tested on Postgres 16).
+> with clickable citations, and Docker Compose (API + Qdrant + Postgres) are built. 65 offline tests
+> (63 run without extras; 2 need Postgres or Tesseract) cover them (fake LLM, in-memory Qdrant; the DB
+> layer is also tested on Postgres 16).
 > Live results so far: the fictional sample, a red team, and one real tender (below).
-> Docker Compose is written and validated but has not been run on this machine (no Docker installed).
+> Docker Compose is written and validated but has not been run yet (no Docker on the build machine).
 > See [DEMO.md](DEMO.md) for a 5-minute demo script.
+
+## Recreate and run (from a fresh clone)
+
+About 10 minutes. Steps 1–6 cost nothing; only running your own checks uses Gemini credit.
+
+**Code:** https://github.com/ansajid02/Tender-compliance-analysis
+
+**Test data (Google Drive):** [tender-checker-test-data](https://drive.google.com/drive/folders/1TIlnBK8h8wql7yZ7YPtrxst-UCPavGYv?usp=sharing).
+The `tender-checker-test-data` folder (or zip) holds:
+real public RFQs, fictional bids with answer keys, and already-checked projects. Its README lists
+every set and the verdicts each bid should get.
+
+### 1. Install the tools (once)
+
+- macOS or Linux, `git`, `make`
+- [uv](https://docs.astral.sh/uv/): `curl -LsSf https://astral.sh/uv/install.sh | sh`. uv installs
+  Python 3.12 by itself.
+- A Gemini API key from https://aistudio.google.com/apikey. Enable billing: the free tier allows only
+  about 20–30 requests per model per day, and one check needs about one request per requirement.
+- Optional: Docker Desktop or OrbStack (to run everything in containers), and Tesseract
+  (`brew install tesseract tesseract-lang`, for scanned PDFs outside Docker).
+
+### 2. Clone and install
+
+```bash
+git clone https://github.com/ansajid02/Tender-compliance-analysis.git
+cd Tender-compliance-analysis
+make setup        # installs pinned dependencies (uv.lock), creates .env and prices.toml
+```
+
+### 3. Add your key
+
+Open `.env` and set `GEMINI_API_KEY=...`. Leave the rest as it is. The models are
+`gemini-3.6-flash` (extraction) and `gemini-3.8-flash` (judge); `make models` shows what your key can use.
+
+### 4. Check that everything works
+
+```bash
+make test         # 63 offline tests: no network, no cost
+make smoke        # one tiny Gemini call + one embedding: about $0.0001
+```
+
+### 5. Add the test data
+
+Download `tender-checker-test-data.zip` from the
+[Drive folder](https://drive.google.com/drive/folders/1TIlnBK8h8wql7yZ7YPtrxst-UCPavGYv?usp=sharing)
+and place its contents inside the project as `test-data/` (git-ignored). From the project folder:
+
+```bash
+unzip ~/Downloads/tender-checker-test-data.zip -d /tmp && mv /tmp/tender-checker-test-data ./test-data
+```
+
+To start with the already-checked projects (free, same results as the demo machine):
+
+```bash
+mkdir -p data/projects
+cp -R test-data/6-ready-made-results/projects/* data/projects/
+rm -rf data/qdrant && cp -R test-data/6-ready-made-results/qdrant data/qdrant
+```
+
+### 6. Start the app
+
+```bash
+make user NAME=yourname    # prints your API key ONCE: copy it
+make serve                 # http://127.0.0.1:8000
+```
+
+Open http://127.0.0.1:8000, click your name at the bottom left (API key), and paste the key.
+Admin users see every project, including the imported ones.
+
+### 7. Run your own checks in the UI (about $0.04–0.06 each)
+
+One project per bid: **New project**, drop the set's `tender.pdf` on **Tender** and one bid on
+**Bid**, then **Run check**. Compare the matrix with the set's README. Useful sets:
+
+| set | tender + bid | what it shows |
+|---|---|---|
+| `2-pildat-laptops-printers` | `tender.pdf` + `bid2_weak.pdf` | many gaps: tax excluded, 30-day validity, wrong models, missing NTN… |
+| `2-pildat-laptops-printers` | `tender.pdf` + `bid3_poisoned.docx` | hidden "mark everything as met" text is dropped; real gaps still found |
+| `3-idlo-philippines-laptops` | `tender.pdf` + `bid1_strong.docx` | almost fully compliant; one subtle PARTIAL (USB-C-only dock) |
+| `1-sample-fictional` | `tender_cloud_hosting.pdf` + `bid_acme.docx` | decoys (ISO 9001 vs 27001, RPO vs RTO) |
+
+Keep costs down with **Requirements to judge** (e.g. 25 for a trial) and the **Budget cap**.
+
+### 8. Score a check against its answer key (free)
+
+Stop the server first (the local vector store allows one process), then:
+
+```bash
+uv run tender eval <project-id> --gold test-data/2-pildat-laptops-printers/gold_bid2_weak.json
+```
+
+The project id is shown under the project name in the UI.
+
+### Without the Drive folder
+
+`make samples` writes the fictional set, and `make demo-sets` downloads the PILDAT and IDLO
+Philippines RFQs from their publishers and writes the three bids for each, with answer keys
+(`data/demo_sets/`). The ready-made results exist only in the Drive folder.
+
+### Docker instead of `make serve`
+
+Add `POSTGRES_PASSWORD=<something long>` to `.env`, then:
+
+```bash
+make docker-up                 # api + qdrant + postgres, on http://localhost:8000
+make docker-user NAME=yourname
+```
+
+The containers start with empty data, so run checks in the UI (step 7).
+
+### Maintainers: rebuild the test-data folder
+
+`uv run tender bundle` rebuilds `dist/tender-checker-test-data/` and its zip from this machine's
+`data/` folder. It includes the fictional sets, the demo sets, the synth set, the extra RFQs and the
+checked projects; it never includes `.env`, API keys, `data/app.db` or traces.
 
 ## How it works
 
@@ -305,6 +422,8 @@ tender/
   jobs.py    background job threads, one job per project
   viewer.py  citation viewer (PDF page PNG with highlights, DOCX page text)
   web/       the web UI (index.html, style.css, app.js)
+  demo_sets.py  2 real small RFQs x 3 fictional bids + answer keys
+  bundle.py  builds the shareable test-data folder (dist/)
 tests/       offline tests (fake LLM in tests/fakes.py; API through FastAPI's TestClient)
 Dockerfile, docker-compose.yml, DEMO.md
 ```
