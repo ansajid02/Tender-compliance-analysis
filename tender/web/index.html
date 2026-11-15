@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Tender Compliance Checker</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2318181b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'/%3E%3Cpath d='m9 12 2 2 4-4'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div class="app">
+    <!-- ============================== sidebar -->
+    <aside class="sidebar" id="sidebar" aria-label="Projects">
+      <div class="sidebar-brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>
+        </span>
+        <div class="brand-text">
+          <span class="brand-name">Tender Checker</span>
+          <span class="brand-sub">Bid compliance</span>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <button id="newProjectBtn" class="btn btn-outline btn-block" type="button">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+          New project
+        </button>
+      </div>
+
+      <div class="sidebar-section">
+        <label class="sr-only" for="projectSearch">Search projects</label>
+        <div class="input-icon">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="projectSearch" class="input input-sm" type="search" placeholder="Search projects" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="sidebar-label">Projects</div>
+      <nav class="sidebar-nav" aria-label="Project list">
+        <ul id="projectList" class="project-list"></ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="userBtn" class="user-chip" type="button" aria-label="API key and account">
+          <span id="userAvatar" class="avatar" aria-hidden="true">?</span>
+          <span class="user-meta">
+            <span id="whoami" class="user-name">Not signed in</span>
+            <span class="user-sub">API key</span>
+          </span>
+          <svg class="icon icon-muted" viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+        </button>
+      </div>
+    </aside>
+    <div id="sidebarScrim" class="scrim scrim-sidebar" hidden></div>
+
+    <!-- ============================== main -->
+    <div class="main-col">
+      <header class="topbar">
+        <button id="menuBtn" class="btn btn-ghost btn-icon only-mobile" type="button" aria-label="Open project list">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
+        </button>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <span class="crumb-muted">Projects</span>
+          <svg class="icon icon-xs icon-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+          <span id="crumbProject" class="crumb-current">Overview</span>
+        </nav>
+        <div class="topbar-right">
+          <span id="health" class="status-pill" role="status"><span class="dot"></span><span class="status-text">Checking</span></span>
+          <div class="theme-switch" role="group" aria-label="Theme">
+            <button type="button" class="theme-btn" data-theme-set="light" aria-label="Light theme">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+            </button>
+            <button type="button" class="theme-btn" data-theme-set="system" aria-label="System theme">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+            </button>
+            <button type="button" class="theme-btn" data-theme-set="dark" aria-label="Dark theme">
+              <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main id="main" class="content" tabindex="-1">
+        <!-- empty state -->
+        <section id="empty" class="empty-state">
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="m9 15 2 2 4-4"/></svg>
+          </div>
+          <h1 class="empty-title">Check a bid against its tender</h1>
+          <p class="empty-text">Every requirement is extracted from the tender and checked against the bid as MET, PARTIAL,
+            MISSING or UNCLEAR, with the tender page and the bid quote that answers it.</p>
+          <ol class="steps">
+            <li><span class="step-num">1</span><span>Add your API key <span class="muted">(bottom left)</span></span></li>
+            <li><span class="step-num">2</span><span>Create a project and upload the tender and the bid</span></li>
+            <li><span class="step-num">3</span><span>Run the check, then click any page reference to see the quote</span></li>
+          </ol>
+          <button id="emptyNewBtn" class="btn btn-primary" type="button">
+            <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            New project
+          </button>
+        </section>
+
+        <!-- project -->
+        <section id="projectView" hidden>
+          <div class="page-head">
+            <div class="page-title-wrap">
+              <h1 id="projName" class="page-title" dir="auto"></h1>
+              <p id="projMeta" class="page-desc"></p>
+            </div>
+            <button id="deleteBtn" class="btn btn-ghost btn-destructive-text" type="button">
+              <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              Delete
+            </button>
+          </div>
+
+          <div class="tabs" role="tablist" aria-label="Project sections">
+            <button class="tab" role="tab" id="tab-overview" aria-controls="panel-overview" aria-selected="true" data-tab="overview">Overview</button>
+            <button class="tab" role="tab" id="tab-compliance" aria-controls="panel-compliance" aria-selected="false" data-tab="compliance">
+              Compliance <span id="tabCount" class="tab-count" hidden></span>
+            </button>
+            <button class="tab" role="tab" id="tab-ask" aria-controls="panel-ask" aria-selected="false" data-tab="ask">Ask</button>
+          </div>
+
+          <!-- ======== overview -->
+          <div id="panel-overview" class="tab-panel" role="tabpanel" aria-labelledby="tab-overview">
+            <div id="kpis" class="kpi-grid" hidden></div>
+            <div id="coverage" class="card coverage" hidden>
+              <div class="coverage-head">
+                <span class="card-title-sm">Coverage of tender requirements</span>
+                <span id="coverageMeta" class="muted text-sm"></span>
+              </div>
+              <div id="coverageBar" class="stacked-bar" role="img"></div>
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Documents</h2>
+                  <p class="card-desc">PDF or Word. Files are checked for hidden text, macros and other active content before parsing.</p>
+                </div>
+                <div class="card-content">
+                  <div class="dropzones">
+                    <label class="dropzone" data-role="tender">
+                      <input type="file" accept=".pdf,.docx" multiple class="sr-only">
+                      <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+                      <span class="dz-title">Tender</span>
+                      <span class="dz-sub">Drop or click to upload</span>
+                    </label>
+                    <label class="dropzone" data-role="bid">
+                      <input type="file" accept=".pdf,.docx" multiple class="sr-only">
+                      <svg class="icon icon-lg" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+                      <span class="dz-title">Bid</span>
+                      <span class="dz-sub">Drop or click to upload</span>
+                    </label>
+                  </div>
+                  <p class="hint">All files uploaded as <strong>Bid</strong> form one bid (proposal + annexes). To compare
+                    competing bids, use a new project for each.</p>
+                  <ul id="docList" class="doc-list"></ul>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card-header">
+                  <h2 class="card-title">Compliance check</h2>
+                  <p class="card-desc">Extracts every requirement, finds the evidence in the bid and verifies each quote.</p>
+                </div>
+                <div class="card-content">
+                  <div class="form-grid">
+                    <div class="field">
+                      <label class="label" for="sample">Requirements to judge</label>
+                      <input id="sample" class="input" type="number" min="0" value="0" inputmode="numeric">
+                      <p class="field-help">0 = all. Use 25 for a cheap trial, evenly spread.</p>
+                    </div>
+                    <div class="field">
+                      <label class="label" for="budget">Budget cap (USD)</label>
+                      <input id="budget" class="input" type="number" min="0.01" step="0.01" value="1.00" inputmode="decimal">
+                      <p class="field-help">The check stops calling the model at this spend.</p>
+                    </div>
+                  </div>
+                  <button id="checkBtn" class="btn btn-primary" type="button">
+                    <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3 20 12 6 21Z"/></svg>
+                    <span>Run check</span>
+                  </button>
+                  <div id="jobBox" class="job" hidden aria-live="polite">
+                    <div class="job-line"><span id="jobStage" class="job-stage"></span><span id="jobCount" class="muted text-sm tabular"></span></div>
+                    <div class="progress" role="progressbar" aria-labelledby="jobStage"><div id="jobBar" class="progress-bar"></div></div>
+                  </div>
+                  <div id="lastCheck" class="last-check" hidden></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ======== compliance -->
+          <div id="panel-compliance" class="tab-panel" role="tabpanel" aria-labelledby="tab-compliance" hidden>
+            <div id="noResults" class="card empty-inline">
+              <p class="muted">No check yet. Upload the tender and the bid, then run the check on the Overview tab.</p>
+            </div>
+            <div id="results" hidden>
+              <div id="warnings" class="alert" role="note" hidden>
+                <svg class="icon alert-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                <div>
+                  <div class="alert-title">Warnings</div>
+                  <ul id="warningList" class="alert-list"></ul>
+                </div>
+              </div>
+
+              <div class="card table-card">
+                <div class="toolbar">
+                  <div class="toolbar-left">
+                    <div class="input-icon toolbar-search">
+                      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                      <label class="sr-only" for="fText">Search requirements</label>
+                      <input id="fText" class="input input-sm" type="search" placeholder="Filter requirements…">
+                    </div>
+                    <label class="sr-only" for="fStatus">Status</label>
+                    <select id="fStatus" class="select input-sm">
+                      <option value="">All statuses</option><option>MISSING</option><option>PARTIAL</option><option>UNCLEAR</option><option>MET</option>
+                    </select>
+                    <label class="sr-only" for="fCat">Category</label>
+                    <select id="fCat" class="select input-sm"><option value="">All categories</option></select>
+                    <label class="switch">
+                      <input id="fMand" type="checkbox" role="switch">
+                      <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+                      <span class="switch-label">Mandatory only</span>
+                    </label>
+                  </div>
+                  <div class="toolbar-right">
+                    <span id="rowCount" class="muted text-sm tabular"></span>
+                    <div class="btn-group" role="group" aria-label="Export">
+                      <button class="btn btn-outline btn-sm" data-export="csv" type="button">
+                        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>CSV</button>
+                      <button class="btn btn-outline btn-sm" data-export="xlsx" type="button">Excel</button>
+                      <button class="btn btn-outline btn-sm" data-export="json" type="button">JSON</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col"><button class="th-sort" data-sort="req_id" type="button">Req</button></th>
+                        <th scope="col"><button class="th-sort" data-sort="status" type="button">Status</button></th>
+                        <th scope="col">Requirement</th>
+                        <th scope="col">Tender</th>
+                        <th scope="col">Bid evidence</th>
+                        <th scope="col">Reason</th>
+                      </tr>
+                    </thead>
+                    <tbody id="matrixBody"></tbody>
+                  </table>
+                </div>
+                <div class="table-foot">
+                  <span id="checkMeta" class="muted text-sm"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ======== ask -->
+          <div id="panel-ask" class="tab-panel" role="tabpanel" aria-labelledby="tab-ask" hidden>
+            <div class="card chat">
+              <div id="chatLog" class="chat-log" aria-live="polite">
+                <div class="chat-empty">
+                  <svg class="icon icon-lg icon-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  <p>Ask about the tender, the bid, or both. Every answer cites the pages it comes from, and claims
+                    without a verified quote are never shown.</p>
+                  <div class="suggestions">
+                    <button type="button" class="chip" data-q="What documents must be submitted with the bid?">What documents must be submitted?</button>
+                    <button type="button" class="chip" data-q="What is the bid validity period, and what does the bid offer?">Bid validity: required vs offered</button>
+                    <button type="button" class="chip" data-q="What are the delivery requirements?">Delivery requirements</button>
+                  </div>
+                </div>
+              </div>
+              <form id="askForm" class="chat-input">
+                <label class="sr-only" for="question">Question</label>
+                <input id="question" class="input" placeholder="Ask a question…" maxlength="2000" required autocomplete="off">
+                <label class="sr-only" for="scope">Search in</label>
+                <select id="scope" class="select">
+                  <option value="both">Tender + bid</option><option value="tender">Tender</option><option value="bid">Bid</option>
+                </select>
+                <button id="askBtn" class="btn btn-primary btn-icon-text" type="submit">
+                  <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+                  <span>Ask</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- ============================== citation sheet -->
+  <div id="sheetScrim" class="scrim" hidden></div>
+  <aside id="viewer" class="sheet" role="dialog" aria-modal="true" aria-labelledby="viewerTitle" hidden>
+    <div class="sheet-header">
+      <div>
+        <h2 id="viewerTitle" class="sheet-title"></h2>
+        <p id="viewerSub" class="sheet-desc"></p>
+      </div>
+      <button id="closeViewer" class="btn btn-ghost btn-icon" type="button" aria-label="Close">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+    </div>
+    <div class="sheet-toolbar">
+      <button id="prevPage" class="btn btn-outline btn-sm" type="button" aria-label="Previous page">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Prev
+      </button>
+      <span id="viewerPage" class="muted text-sm tabular"></span>
+      <button id="nextPage" class="btn btn-outline btn-sm" type="button" aria-label="Next page">
+        Next<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+    <div id="viewerBody" class="sheet-body"></div>
+  </aside>
+
+  <!-- ============================== dialogs -->
+  <div id="dialogScrim" class="scrim scrim-dialog" hidden></div>
+
+  <div id="keyDialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="keyTitle" hidden>
+    <form id="keyForm">
+      <h2 id="keyTitle" class="dialog-title">API key</h2>
+      <p class="dialog-desc">Paste the key printed by <code>make user NAME=you</code>. It is kept in this browser only.</p>
+      <div class="field">
+        <label class="label" for="keyInput">Key</label>
+        <input id="keyInput" class="input mono" type="password" placeholder="tk_…" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-outline" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="newDialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="newTitle" hidden>
+    <form id="newProject">
+      <h2 id="newTitle" class="dialog-title">New project</h2>
+      <p class="dialog-desc">One project holds one tender and one bid.</p>
+      <div class="field">
+        <label class="label" for="newName">Name</label>
+        <input id="newName" class="input" placeholder="e.g. Ministry X cloud RFP, Acme bid" maxlength="120" required>
+      </div>
+      <div class="dialog-footer">
+        <button type="button" class="btn btn-outline" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary">Create</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="deleteDialog" class="dialog" role="alertdialog" aria-modal="true" aria-labelledby="deleteTitle" aria-describedby="deleteDesc" hidden>
+    <h2 id="deleteTitle" class="dialog-title">Delete this project?</h2>
+    <p id="deleteDesc" class="dialog-desc">This removes its files, vectors and results. The audit log keeps a record of the deletion. This can't be undone.</p>
+    <div class="dialog-footer">
+      <button type="button" class="btn btn-outline" data-close>Cancel</button>
+      <button id="confirmDelete" type="button" class="btn btn-destructive">Delete project</button>
+    </div>
+  </div>
+
+  <div id="toasts" class="toaster" aria-live="polite" aria-atomic="false"></div>
+  <script src="/static/app.js"></script>
+</body>
+</html>

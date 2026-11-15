@@ -1,0 +1,56 @@
+# docker compose up -d   -> API + web UI on http://localhost:8000 (/health, /docs)
+# Secrets come from .env (GEMINI_API_KEY, POSTGRES_PASSWORD). Qdrant and Postgres are not exposed to the host.
+name: tender-checker
+
+services:
+  api:
+    build: .
+    image: tender-checker:0.1.0
+    env_file: .env
+    environment:
+      QDRANT_URL: http://qdrant:6333
+      DATABASE_URL: postgresql+psycopg://tender:${POSTGRES_PASSWORD:-change-me-dev-only}@postgres:5432/tender
+      OCR_ENABLED: "1"
+    ports:
+      - "127.0.0.1:8000:8000"   # local only; put a TLS reverse proxy in front for a real deployment
+    volumes:
+      - app-data:/app/data      # uploads, page texts, chunks, check results
+      - app-traces:/app/traces  # JSONL traces (tokens, cost, latency)
+    depends_on:
+      qdrant:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  qdrant:
+    image: qdrant/qdrant:v1.20.1
+    volumes:
+      - qdrant-data:/qdrant/storage
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c ':> /dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16.16-alpine
+    environment:
+      POSTGRES_USER: tender
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-dev-only}
+      POSTGRES_DB: tender
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tender -d tender"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  app-traces:
+  qdrant-data:
+  pg-data:
