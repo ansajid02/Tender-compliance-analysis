@@ -1,0 +1,84 @@
+# USD per 1M tokens, used to compute cost in traces and evals. Copy to prices.toml (make setup does this).
+# Models not listed here get cost = unknown ("?" in reports). Thinking tokens count as output tokens.
+
+[models]
+
+# Google Gemini, paid tier (Standard), from https://aistudio.google.com/docs/pricing on 2026-11-15.
+# Output includes thinking tokens. DATED CHANGES: gemini-3.6/3.8-flash double on 2027-01-01
+# (1.50 / 7.50); gemini-4-argon/carbon double on 2026-12-01 (4.00 / 20.00). Update these then.
+# Batch API = 50% of these.
+[models."gemini-3.6-flash"]
+input = 0.75
+output = 3.75
+
+[models."gemini-3.8-flash"]
+input = 0.75
+output = 3.75
+
+[models."gemini-3.1-flash-lite"]
+input = 0.25
+output = 1.50
+
+[models."gemini-4-hydrogen"]
+input = 1.50
+output = 7.50
+
+[models."gemini-4-argon"]
+input = 2.00
+output = 10.00
+
+[models."gemini-4-carbon"]
+input = 2.00
+output = 10.00
+
+# embeddings (input only; the Gemini API does not report embedding token counts, so traces show "?")
+[models."gemini-embedding-001"]
+input = 0.15
+output = 0.0
+
+[models."gemini-embedding-2"]
+input = 0.20
+output = 0.0
+
+# AWS Bedrock (LLM_BACKEND=bedrock). ESTIMATES: check https://aws.amazon.com/bedrock/pricing/
+
+[models."anthropic.claude-haiku-5-5"]
+input = 0.10
+output = 0.50
+
+[models."anthropic.claude-sonnet-5-5"]
+input = 2.00
+output = 10.00
+
+[models."anthropic.claude-opus-5-5"]
+input = 4.00
+output = 20.00
+
+[models."qwen.qwen3-235b-a22b-2507"]
+input = 0.22
+output = 0.88
+
+[models."qwen.qwen3-next-80b-a3b-instruct"]
+input = 0.14
+output = 1.20
+
+[models."mistral.mistral-large-3-675b-instruct"]
+input = 0.50
+output = 1.50
+
+[models."openai.gpt-oss-120b"]
+input = 0.15
+output = 0.60
+
+# embeddings (input only)
+[models."cohere.embed-multilingual-v3"]
+input = 0.10
+output = 0.0
+
+[models."cohere.embed-v4:0"]
+input = 0.12
+output = 0.0
+
+[models."amazon.titan-embed-text-v2:0"]
+input = 0.02
+output = 0.0

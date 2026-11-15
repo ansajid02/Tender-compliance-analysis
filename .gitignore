@@ -1,0 +1,16 @@
+# secrets + local config
+.env
+prices.toml
+
+# environments + caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.DS_Store
+
+# generated / local data (uploads, vectors, DB, traces, downloaded tenders, demo sets, results)
+data/
+traces/
+results/
+samples/
